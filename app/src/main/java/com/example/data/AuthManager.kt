@@ -43,7 +43,12 @@ object AuthManager {
      * Sign in via Google with role verification
      * After Google login, Firebase verifies the account.
      */
-    fun performGoogleLogin(email: String, intendedRole: UserRole, onError: (String) -> Unit): Boolean {
+    fun performGoogleLogin(
+        email: String,
+        intendedRole: UserRole,
+        adminPassword: String? = null,
+        onError: (String) -> Unit
+    ): Boolean {
         val emailClean = email.trim()
         if (emailClean.isEmpty() || !emailClean.contains("@")) {
             onError("Please enter a valid Gmail address.")
@@ -64,9 +69,21 @@ object AuthManager {
             }
         }
 
-        // Double check: if user attempts to bypass Super Admin access and email is not in whitelist, redirect to correct role
-        if (intendedRole == UserRole.SUPER_ADMIN && !isSuperAdminEmail(emailClean)) {
-            onError("Unauthorized Access - You are not authorized to access Super Admin")
+        // 1. Double check: Super Admin whitelisting and password verification
+        if (role == UserRole.SUPER_ADMIN || intendedRole == UserRole.SUPER_ADMIN) {
+            if (!isSuperAdminEmail(emailClean)) {
+                onError("Unauthorized Access - You are not authorized to access Super Admin")
+                return false
+            }
+            if (adminPassword != "stalha@21") {
+                onError("Access Denied: Incorrect Password for Super Admin.")
+                return false
+            }
+        }
+
+        // 2. Customers are only permitted to browse using Guest Mode
+        if (role == UserRole.CUSTOMER || intendedRole == UserRole.CUSTOMER) {
+            onError("Customer accounts must use Guest Mode to browse the luxury boutique.")
             return false
         }
 
@@ -85,14 +102,13 @@ object AuthManager {
         _currentUser.value = userObj
 
         // Dispatch REALTIME "New login" audit alert to Super Admin
-        if (role == UserRole.STORE_OWNER || role == UserRole.CUSTOMER) {
-            val userLabel = if (role == UserRole.STORE_OWNER) "Store Owner" else "Customer"
+        if (role == UserRole.STORE_OWNER) {
             TSLuxeWearRepository.sendPushNotification(
                 recipientRole = "SUPER_ADMIN",
                 recipientEmail = SUPER_ADMIN_1,
                 title = "Security: New Login Alert 🔑",
-                message = "Secure login detected. Profile: $userLabel | Email: $emailClean | Name: $name.",
-                type = if (role == UserRole.STORE_OWNER) "STORE_LOGIN" else "CUSTOMER_LOGIN",
+                message = "Secure login detected. Profile: Store Owner | Email: $emailClean | Name: $name.",
+                type = "STORE_LOGIN",
                 category = "Systems",
                 targetScreen = "super_admin_dashboard"
             )

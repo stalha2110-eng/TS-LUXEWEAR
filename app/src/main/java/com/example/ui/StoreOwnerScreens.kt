@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -120,6 +121,16 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
 
     // Multi-Tab Navigation Design (0: Dash/Profile, 1: Catalog/Historics, 2: Toggles/Categories, 3: Bookings/Invoices, 4: Support Chat Desk, 5: Offers Broadcast)
     var activeSubTab by remember { mutableStateOf(0) }
+
+    // Shimmer skeleton state simulation
+    var isDataLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(activeSubTab, selectedStoreId) {
+        if (isDataLoading) return@LaunchedEffect
+        isDataLoading = true
+        delay(600)
+        isDataLoading = false
+    }
 
     // Stat Switch Toggles
     var showWeeklySaleStat by remember { mutableStateOf(false) }
@@ -290,7 +301,7 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                 )
             }
         ) {
-            val tabs = listOf("Dashboard", "Catalog & Inventory", "Category & Settings", "Bookings & Invoice", "Chat & Inquiries", "Offers & followers")
+            val tabs = listOf("Dashboard", "Catalog & Inventory", "Category & Settings", "Bookings & Invoice", "Chat & Inquiries", "Offers & followers", "WhatsApp Sync")
             tabs.forEachIndexed { idx, title ->
                 Tab(
                     selected = activeSubTab == idx,
@@ -730,7 +741,11 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                                 Text("Items Catalog List", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = LuxeBurgundy)
                             }
 
-                            if (storeProducts.isEmpty()) {
+                            if (isDataLoading) {
+                                item {
+                                    SkeletonProductGrid(rowsCount = 1)
+                                }
+                            } else if (storeProducts.isEmpty()) {
                                 item {
                                     Text("No collection items recorded. Tap Add Item to populate catalogs.", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.padding(14.dp))
                                 }
@@ -1202,7 +1217,11 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                                 Text("Orders Bookings Ledger (${filteredOrders.size})", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = LuxeBurgundy)
                             }
 
-                            if (filteredOrders.isEmpty()) {
+                            if (isDataLoading) {
+                                item {
+                                    SkeletonList(itemsCount = 2)
+                                }
+                            } else if (filteredOrders.isEmpty()) {
                                 item {
                                     Text("No bookings matching filters.", fontSize = 11.sp, color = Color.Gray, modifier = Modifier.padding(14.dp))
                                 }
@@ -1418,8 +1437,11 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                             }
                         }
 
-                        when (chatDeskTabState) {
-                            0 -> {
+                        if (isDataLoading) {
+                            SkeletonChatScreen()
+                        } else {
+                            when (chatDeskTabState) {
+                                0 -> {
                                 // Unified Inbox
                                 val uniqueSenders = storeChatMessages.map { it.customerName }.distinct()
                                 var activeChatSender by remember { mutableStateOf("") }
@@ -2022,6 +2044,7 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                         }
                     }
                 }
+                }
 
                 // ================== TAB 5: PUBLISH OFFERS & FOLLOWERS ==================
                 5 -> {
@@ -2050,6 +2073,105 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                                     modifier = Modifier.testTag("publish_offer_btn")
                                 ) {
                                     Text("Publish Promo", fontSize = 11.sp)
+                                }
+                            }
+                        }
+
+                        item {
+                            var promoTitle by remember { mutableStateOf("") }
+                            var promoMessage by remember { mutableStateOf("") }
+                            var promoRecipient by remember { mutableStateOf("all") }
+                            var promoFeedback by remember { mutableStateOf("") }
+                            var isSendingPromo by remember { mutableStateOf(false) }
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = LuxeCream),
+                                border = BorderStroke(1.2.dp, LuxeGold.copy(alpha = 0.5f)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Icon(Icons.Default.Campaign, contentDescription = null, tint = LuxeBurgundy, modifier = Modifier.size(20.dp))
+                                        Text("FCM Promotional Broadcast Engine", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = LuxeBurgundy)
+                                    }
+                                    Text("Dispatch cloud-push notification campaigns instantly to your shoppers' notification shade and devices.", fontSize = 10.sp, color = Color.Gray)
+                                    
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    
+                                    OutlinedTextField(
+                                        value = promoTitle,
+                                        onValueChange = { promoTitle = it },
+                                        placeholder = { Text("Campaign Title (e.g., Silk Sensation Sale 👗)", fontSize = 11.sp) },
+                                        label = { Text("Campaign Title", fontSize = 10.sp) },
+                                        modifier = Modifier.fillMaxWidth().height(50.dp).testTag("fcm_campaign_title_input"),
+                                        textStyle = TextStyle(fontSize = 11.sp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeBurgundy),
+                                        singleLine = true
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    OutlinedTextField(
+                                        value = promoMessage,
+                                        onValueChange = { promoMessage = it },
+                                        placeholder = { Text("Body text (e.g., Grab 20% flat discount on selected bridal lehengas!)", fontSize = 11.sp) },
+                                        label = { Text("Push Notification Message", fontSize = 10.sp) },
+                                        modifier = Modifier.fillMaxWidth().height(66.dp).testTag("fcm_campaign_msg_input"),
+                                        textStyle = TextStyle(fontSize = 11.sp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeBurgundy)
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    OutlinedTextField(
+                                        value = promoRecipient,
+                                        onValueChange = { promoRecipient = it },
+                                        placeholder = { Text("email address or 'all' for all followers", fontSize = 11.sp) },
+                                        label = { Text("Target Customers Email Filter", fontSize = 10.sp) },
+                                        modifier = Modifier.fillMaxWidth().height(50.dp).testTag("fcm_campaign_recipient_input"),
+                                        textStyle = TextStyle(fontSize = 11.sp),
+                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeBurgundy),
+                                        singleLine = true
+                                    )
+                                    
+                                    if (promoFeedback.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(promoFeedback, color = LuxeBurgundy, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    
+                                    Button(
+                                        onClick = {
+                                            if (promoTitle.trim().isEmpty() || promoMessage.trim().isEmpty()) {
+                                                promoFeedback = "⚠️ Please specify both title and message."
+                                                return@Button
+                                            }
+                                            isSendingPromo = true
+                                            repository.sendPromotionalCampaign(
+                                                storeId = storeId,
+                                                title = promoTitle,
+                                                message = promoMessage,
+                                                targetCustomerEmail = promoRecipient
+                                            ) { success, error ->
+                                                isSendingPromo = false
+                                                if (success) {
+                                                    promoFeedback = "✨ Promotional Push Broadcasted and logged in Firestore successfully!"
+                                                    promoTitle = ""
+                                                    promoMessage = ""
+                                                } else {
+                                                    promoFeedback = "❌ Broadcast Firestore sync issues: $error"
+                                                }
+                                            }
+                                        },
+                                        enabled = !isSendingPromo,
+                                        colors = ButtonDefaults.buttonColors(containerColor = LuxeBurgundy),
+                                        shape = RoundedCornerShape(6.dp),
+                                        modifier = Modifier.align(Alignment.End).testTag("fcm_campaign_send_btn")
+                                    ) {
+                                        Text(if (isSendingPromo) "Broadcasting..." else "Blast FCM Campaign 🚀", fontSize = 11.sp)
+                                    }
                                 }
                             }
                         }
@@ -2105,6 +2227,14 @@ fun StoreOwnerDashboardScreen(repository: TSLuxeWearRepository) {
                             }
                         }
                     }
+                }
+                6 -> {
+                    WhatsAppCatalogSyncScreen(
+                        repository = repository,
+                        storeId = storeId,
+                        storeProducts = storeProducts,
+                        ownerWhatsapp = activeStore?.ownerWhatsapp?.ifBlank { activeStore?.ownerPhone } ?: ""
+                    )
                 }
             }
 

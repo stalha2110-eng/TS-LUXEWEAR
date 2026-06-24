@@ -102,6 +102,13 @@ fun SuperAdminDashboardScreen(repository: TSLuxeWearRepository) {
     var sAddress by remember { mutableStateOf("") }
     var sType by remember { mutableStateOf("Boutique Partywear") }
 
+    var sNameError by remember { mutableStateOf<String?>(null) }
+    var sOwnerError by remember { mutableStateOf<String?>(null) }
+    var sOwnerEmailError by remember { mutableStateOf<String?>(null) }
+    var sPhoneError by remember { mutableStateOf<String?>(null) }
+    var sWhatsappError by remember { mutableStateOf<String?>(null) }
+    var sAddressError by remember { mutableStateOf<String?>(null) }
+
     Column(modifier = Modifier.fillMaxSize().background(LuxeCream)) {
 
         // authorities navigation tab-gantry
@@ -2437,31 +2444,52 @@ fun SuperAdminDashboardScreen(repository: TSLuxeWearRepository) {
                             item {
                                 OutlinedTextField(
                                     value = sName,
-                                    onValueChange = { sName = it },
+                                    onValueChange = { 
+                                        sName = it 
+                                        sNameError = null
+                                    },
                                     modifier = Modifier.fillMaxWidth().testTag("add_store_name_input"),
                                     label = { Text("Boutique Name (e.g. Kanchipuram Weaves)") },
+                                    isError = sNameError != null,
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
                                 )
+                                sNameError?.let {
+                                    Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                }
                             }
 
                             item {
                                 OutlinedTextField(
                                     value = sOwner,
-                                    onValueChange = { sOwner = it },
+                                    onValueChange = { 
+                                        sOwner = it 
+                                        sOwnerError = null
+                                    },
                                     modifier = Modifier.fillMaxWidth().testTag("add_store_owner_input"),
                                     label = { Text("Owner Full Name") },
+                                    isError = sOwnerError != null,
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
                                 )
+                                sOwnerError?.let {
+                                    Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                }
                             }
 
                             item {
                                 OutlinedTextField(
                                     value = sOwnerEmail,
-                                    onValueChange = { sOwnerEmail = it },
+                                    onValueChange = { 
+                                        sOwnerEmail = it 
+                                        sOwnerEmailError = null
+                                    },
                                     modifier = Modifier.fillMaxWidth().testTag("add_store_owner_email_input"),
                                     label = { Text("Owner Login Gmail (e.g. owner@gmail.com)") },
+                                    isError = sOwnerEmailError != null,
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
                                 )
+                                sOwnerEmailError?.let {
+                                    Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                }
                             }
 
                             item {
@@ -2469,31 +2497,56 @@ fun SuperAdminDashboardScreen(repository: TSLuxeWearRepository) {
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    OutlinedTextField(
-                                        value = sPhone,
-                                        onValueChange = { sPhone = it },
-                                        modifier = Modifier.weight(1f).testTag("add_store_phone_input"),
-                                        label = { Text("Primary Phone") },
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
-                                    )
-                                    OutlinedTextField(
-                                        value = sWhatsapp,
-                                        onValueChange = { sWhatsapp = it },
-                                        modifier = Modifier.weight(1f).testTag("add_store_whatsapp_input"),
-                                        label = { Text("WhatsApp ID") },
-                                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
-                                    )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        OutlinedTextField(
+                                            value = sPhone,
+                                            onValueChange = { 
+                                                sPhone = it 
+                                                sPhoneError = null
+                                            },
+                                            modifier = Modifier.fillMaxWidth().testTag("add_store_phone_input"),
+                                            label = { Text("Primary Phone") },
+                                            isError = sPhoneError != null,
+                                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
+                                        )
+                                        sPhoneError?.let {
+                                            Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                        }
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        OutlinedTextField(
+                                            value = sWhatsapp,
+                                            onValueChange = { 
+                                                sWhatsapp = it 
+                                                sWhatsappError = null
+                                            },
+                                            modifier = Modifier.fillMaxWidth().testTag("add_store_whatsapp_input"),
+                                            label = { Text("WhatsApp ID") },
+                                            isError = sWhatsappError != null,
+                                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
+                                        )
+                                        sWhatsappError?.let {
+                                            Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                        }
+                                    }
                                 }
                             }
 
                             item {
                                 OutlinedTextField(
                                     value = sAddress,
-                                    onValueChange = { sAddress = it },
+                                    onValueChange = { 
+                                        sAddress = it 
+                                        sAddressError = null
+                                    },
                                     modifier = Modifier.fillMaxWidth().testTag("add_store_address_input"),
                                     label = { Text("Boutique Area Address Location") },
+                                    isError = sAddressError != null,
                                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LuxeGold, focusedLabelColor = LuxeBurgundy)
                                 )
+                                sAddressError?.let {
+                                    Text(it, color = Color.Red, fontSize = 9.sp, modifier = Modifier.padding(start = 4.dp))
+                                }
                             }
 
                             // Choose Emoji Selector Logo
@@ -2582,9 +2635,54 @@ fun SuperAdminDashboardScreen(repository: TSLuxeWearRepository) {
                                 Spacer(modifier = Modifier.height(14.dp))
                                 Button(
                                     onClick = {
-                                        if (sName.trim().isEmpty() || sOwner.trim().isEmpty()) {
-                                            Toast.makeText(context, "Boutique name and owner are required fields!", Toast.LENGTH_SHORT).show()
+                                        var validationOk = true
+
+                                        if (sName.trim().length < 3) {
+                                            sNameError = "Boutique name must be at least 3 characters"
+                                            validationOk = false
                                         } else {
+                                            sNameError = null
+                                        }
+
+                                        if (sOwner.trim().length < 3) {
+                                            sOwnerError = "Owner name must be at least 3 characters"
+                                            validationOk = false
+                                        } else {
+                                            sOwnerError = null
+                                        }
+
+                                        val emailTrimmed = sOwnerEmail.trim()
+                                        if (emailTrimmed.isEmpty() || !emailTrimmed.lowercase().endsWith("@gmail.com")) {
+                                            sOwnerEmailError = "Please enter a valid owner login @gmail.com address"
+                                            validationOk = false
+                                        } else {
+                                            sOwnerEmailError = null
+                                        }
+
+                                        val phoneDigits = sPhone.filter { it.isDigit() }
+                                        if (phoneDigits.length < 10) {
+                                            sPhoneError = "Phone must be a valid 10-digit number"
+                                            validationOk = false
+                                        } else {
+                                            sPhoneError = null
+                                        }
+
+                                        val waDigits = sWhatsapp.filter { it.isDigit() }
+                                        if (waDigits.length < 10) {
+                                            sWhatsappError = "WhatsApp must be a valid 10-digit number"
+                                            validationOk = false
+                                        } else {
+                                            sWhatsappError = null
+                                        }
+
+                                        if (sAddress.trim().length < 6) {
+                                            sAddressError = "Please enter a complete address (minimum 6 characters)"
+                                            validationOk = false
+                                        } else {
+                                            sAddressError = null
+                                        }
+
+                                        if (validationOk) {
                                             val generatedId = "store_" + sName.lowercase().trim().replace(" ", "_")
                                             val liveUrl = "http://tsluxewear.com/" + sName.lowercase().trim().replace(" ", "_")
                                             val mapsUrl = "https://maps.google.com/?q=" + sName.trim().replace(" ", "+")
@@ -2606,11 +2704,20 @@ fun SuperAdminDashboardScreen(repository: TSLuxeWearRepository) {
                                             )
 
                                             repository.addStore(nextStoreObj)
-                                            if (sOwnerEmail.trim().isNotEmpty()) {
-                                                repository.registerStoreOwnerEmail(generatedId, sOwnerEmail.trim())
-                                            }
+                                            repository.registerStoreOwnerEmail(generatedId, emailTrimmed)
+                                            
+                                            // Clear state on success
+                                            sName = ""
+                                            sOwner = ""
+                                            sOwnerEmail = ""
+                                            sPhone = "+91 "
+                                            sWhatsapp = "91 "
+                                            sAddress = ""
+                                            
                                             showAddStoreModal = false
                                             Toast.makeText(context, "Luxury store published successfully! 🎉", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            Toast.makeText(context, "Please correct the form errors before publishing.", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = LuxeBurgundy),

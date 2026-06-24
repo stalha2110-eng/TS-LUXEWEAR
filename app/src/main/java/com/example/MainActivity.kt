@@ -10,7 +10,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -108,6 +111,7 @@ fun MainAppShell(
     // Current Active Screen Route. Establishes a clean, secure navigation state
     // Routes: "login", "customer_home", "store_owner_dashboard", "super_admin_dashboard"
     var currentRoute by remember { mutableStateOf("login") }
+    var showNavDrawer by remember { mutableStateOf(false) }
     
     // Selected view helpers inside customer screen
     var selectedProductForDetail by remember { mutableStateOf<Product?>(null) }
@@ -174,117 +178,146 @@ fun MainAppShell(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            Column {
-                // Safe notch spacer
-                Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-                
-                // Premium Interactive Sandbox / Browser Address bar
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF141416), // Deep velvet obsidian
-                    tonalElevation = 8.dp,
-                    border = BorderStroke(1.dp, LuxeGold.copy(alpha = 0.15f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        // Header title block
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(LuxeGold.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Shield,
-                                        contentDescription = null,
-                                        tint = LuxeGold,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                }
-                                Text(
-                                    text = "TS LUXEWEAR GATEWAY ENGINE",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                            
-                            // User Info capsule and Notification button
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isDesktop = maxWidth >= 600.dp
+
+        MobileNavigationDrawer(
+            isOpen = showNavDrawer,
+            onDismiss = { showNavDrawer = false },
+            currentRoute = currentRoute,
+            currentUser = currentUser,
+            onNavigate = { currentRoute = it }
+        )
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            bottomBar = {
+                AppVersionFooter(currentRoute = currentRoute)
+            },
+            topBar = {
+                Column {
+                    // Safe notch spacer
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    
+                    // Premium Interactive Sandbox / Browser Address bar
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFF141416), // Deep velvet obsidian
+                        tonalElevation = 8.dp,
+                        border = BorderStroke(1.dp, LuxeGold.copy(alpha = 0.15f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            // Header title block
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Bell Button with Badge Count
-                                IconButton(
-                                    onClick = { showNotificationCenter = true },
-                                    modifier = Modifier
-                                        .size(34.dp)
-                                        .testTag("notification_center_bell_btn")
-                                ) {
-                                    BadgedBox(
-                                        badge = {
-                                            if (unreadCount > 0) {
-                                                Badge(
-                                                    containerColor = Color.Red,
-                                                    contentColor = Color.White
-                                                ) {
-                                                    Text("$unreadCount", fontSize = 8.sp)
-                                                }
-                                            }
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    if (currentUser != null && !isDesktop) {
+                                        IconButton(
+                                            onClick = { showNavDrawer = true },
+                                            modifier = Modifier.size(34.dp).testTag("hamburger_nav_btn")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Menu,
+                                                contentDescription = "Open Navigation Menu",
+                                                tint = LuxeGold,
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .size(26.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.White)
+                                            .border(1.2.dp, LuxeGold, CircleShape),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Notifications,
-                                            contentDescription = "Open In-App Notification Center",
-                                            tint = if (unreadCount > 0) LuxeGold else Color.LightGray.copy(alpha = 0.8f),
-                                            modifier = Modifier.size(20.dp)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.logo_luxe),
+                                            contentDescription = "Brand Logo",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
                                         )
                                     }
+                                    Text(
+                                        text = "TS LUXEWEAR GATEWAY",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        letterSpacing = 1.sp
+                                    )
                                 }
-
+                                
+                                // User Info capsule and Notification button
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(Color.White.copy(alpha = 0.08f))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Box(
+                                    // Bell Button with Badge Count
+                                    IconButton(
+                                        onClick = { showNotificationCenter = true },
                                         modifier = Modifier
-                                            .size(6.dp)
-                                            .background(if (currentUser != null) Color(0xFF25D366) else Color.Gray, CircleShape)
-                                    )
-                                    Text(
-                                        text = currentUser?.email ?: "Not Authenticated",
-                                        color = if (currentUser != null) Color.LightGray else Color.Gray,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
+                                            .size(34.dp)
+                                            .testTag("notification_center_bell_btn")
+                                    ) {
+                                        BadgedBox(
+                                            badge = {
+                                                if (unreadCount > 0) {
+                                                    Badge(
+                                                        containerColor = Color.Red,
+                                                        contentColor = Color.White
+                                                    ) {
+                                                        Text("$unreadCount", fontSize = 8.sp)
+                                                    }
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Notifications,
+                                                contentDescription = "Open In-App Notification Center",
+                                                tint = if (unreadCount > 0) LuxeGold else Color.LightGray.copy(alpha = 0.8f),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
 
-                                if (currentUser != null) {
-                                    Box(
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(0xFFE53935))
-                                            .clickable {
-                                                AuthManager.logout()
-                                                currentRoute = "login"
-                                            }
+                                            .background(Color.White.copy(alpha = 0.08f))
                                             .padding(horizontal = 8.dp, vertical = 4.dp)
                                     ) {
-                                        Text("Logout", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .background(if (currentUser != null) Color(0xFF25D366) else Color.Gray, CircleShape)
+                                        )
+                                        Text(
+                                            text = if (currentUser != null) "${currentUser?.displayName} (${currentUser?.role?.displayName})" else "Not Authenticated",
+                                            color = if (currentUser != null) Color.LightGray else Color.Gray,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    if (currentUser != null) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color(0xFFE53935))
+                                                .clickable {
+                                                    AuthManager.logout()
+                                                    currentRoute = "login"
+                                                }
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text("Logout", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }
@@ -292,22 +325,37 @@ fun MainAppShell(
                     }
                 }
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(LuxeCream)
-        ) {
-            // Main Router Content Screen with beautiful transitions
-            AnimatedContent(
-                targetState = currentRoute,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
-                },
-                label = "ScreenNavigator"
-            ) { routeState ->
+        ) { innerPadding ->
+            LuxeErrorBoundary(
+                repository = repository,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(LuxeCream)
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                    if (currentUser != null && isDesktop) {
+                        NavigationSideRail(
+                            currentRoute = currentRoute,
+                            currentUser = currentUser,
+                            onNavigate = { currentRoute = it }
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
+                        // Main Router Content Screen with beautiful transitions
+                    AnimatedContent(
+                        targetState = currentRoute,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
+                        },
+                        label = "ScreenNavigator"
+                    ) { routeState ->
                 when (routeState) {
                     "login" -> {
                         LoginScreen(
@@ -368,6 +416,7 @@ fun MainAppShell(
                             CustomerDashboardScreen(
                                 repository = repository,
                                 onProductClick = { prod ->
+                                    repository.addProductToRecentlyViewed(prod.id)
                                     selectedProductForDetail = prod
                                 },
                                 onVirtualTryClick = { prod ->
@@ -390,9 +439,11 @@ fun MainAppShell(
                         }
                     }
                 }
-            }
+            } // closes AnimatedContent
+                    } // closes weighted Box
+                } // closes Row
 
-            // Real-time FCM sliding notifications banner
+                // Real-time FCM sliding notifications banner
             RealtimeNotificationBanner(
                 repository = repository,
                 onNavigate = { route ->
@@ -519,9 +570,17 @@ fun MainAppShell(
                         }
                     }
                 }
-            }
+            } // Close the securityIncidentMessage != null if block
+            
+            // Floating simulated packet drop fault switch for interactive testing
+            SimulatedNetworkFaultOverlay(
+                repository = repository,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
         }
     }
+}
+}
 }
 
 /**
@@ -628,6 +687,291 @@ fun handleUrlNavigationInput(
             else -> "customer_home"
         }
         onGranted(target)
+    }
+}
+
+/**
+ * Mobile-responsive adaptive drawer menu.
+ */
+@Composable
+fun MobileNavigationDrawer(
+    isOpen: Boolean,
+    onDismiss: () -> Unit,
+    currentRoute: String,
+    currentUser: AuthUser?,
+    onNavigate: (String) -> Unit
+) {
+    if (isOpen) {
+        Dialog(onDismissRequest = onDismiss) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .fillMaxHeight(0.75f)
+                    .clip(RoundedCornerShape(16.dp)),
+                color = LuxeCharcoal,
+                border = BorderStroke(1.5.dp, LuxeGold)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .border(1.5.dp, LuxeGold, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_luxe),
+                                    contentDescription = "Brand Logo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            Text(
+                                text = "TS LUXEWEAR MENU",
+                                color = LuxeGold,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily.Serif
+                            )
+                        }
+                        IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                            Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    
+                    Divider(color = LuxeGold.copy(alpha = 0.3f), thickness = 1.dp)
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    NavigationNavItem(
+                        label = "Shopping Zone",
+                        description = "Browse boutique catalogs",
+                        icon = Icons.Default.Home,
+                        isSelected = currentRoute == "customer_home",
+                        onClick = {
+                            onNavigate("customer_home")
+                            onDismiss()
+                        }
+                    )
+                    
+                    if (currentUser != null && (currentUser.role == UserRole.STORE_OWNER || currentUser.role == UserRole.SUPER_ADMIN)) {
+                        NavigationNavItem(
+                            label = "Boutique Panel",
+                            description = "Manage sales & inventory",
+                            icon = Icons.Default.Store,
+                            isSelected = currentRoute == "store_owner_dashboard",
+                            onClick = {
+                                onNavigate("store_owner_dashboard")
+                                onDismiss()
+                            }
+                        )
+                    }
+                    
+                    if (currentUser != null && currentUser.role == UserRole.SUPER_ADMIN) {
+                        NavigationNavItem(
+                            label = "Network Admin",
+                            description = "Platform core & control",
+                            icon = Icons.Default.Settings,
+                            isSelected = currentRoute == "super_admin_dashboard",
+                            onClick = {
+                                onNavigate("super_admin_dashboard")
+                                onDismiss()
+                            }
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(if (currentUser != null) Color(0xFF25D366) else Color.Gray, CircleShape)
+                        )
+                        Column {
+                            Text(
+                                text = currentUser?.displayName ?: "Guest Client",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = currentUser?.role?.displayName ?: "Viewer Status",
+                                color = LuxeGold,
+                                fontSize = 8.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Desktop side navigation rail.
+ */
+@Composable
+fun NavigationSideRail(
+    currentRoute: String,
+    currentUser: AuthUser?,
+    onNavigate: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(220.dp)
+            .background(LuxeCharcoal)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(2.dp, LuxeGold, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo_luxe),
+                    contentDescription = "Brand Logo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Column {
+                Text(
+                    text = "TS LuxeWear",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Serif
+                )
+                Text(
+                    text = "COUTURE PORTAL",
+                    color = LuxeGold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 9.sp,
+                    letterSpacing = 1.sp
+                )
+            }
+        }
+        
+        NavigationNavItem(
+            label = "Shopping Zone",
+            description = "Browse boutique catalogs",
+            icon = Icons.Default.Home,
+            isSelected = currentRoute == "customer_home",
+            onClick = { onNavigate("customer_home") }
+        )
+        
+        if (currentUser != null && (currentUser.role == UserRole.STORE_OWNER || currentUser.role == UserRole.SUPER_ADMIN)) {
+            NavigationNavItem(
+                label = "Boutique Panel",
+                description = "Manage sales & inventory",
+                icon = Icons.Default.Store,
+                isSelected = currentRoute == "store_owner_dashboard",
+                onClick = { onNavigate("store_owner_dashboard") }
+            )
+        }
+        
+        if (currentUser != null && currentUser.role == UserRole.SUPER_ADMIN) {
+            NavigationNavItem(
+                label = "Network Admin",
+                description = "Platform core & control",
+                icon = Icons.Default.Settings,
+                isSelected = currentRoute == "super_admin_dashboard",
+                onClick = { onNavigate("super_admin_dashboard") }
+            )
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        Text(
+            text = "TS LUXEWEAR © 2026",
+            color = Color.Gray,
+            fontSize = 9.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        )
+    }
+}
+
+/**
+ * Dynamic design nav item component.
+ */
+@Composable
+fun NavigationNavItem(
+    label: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val bg = if (isSelected) LuxeBurgundy else Color.White.copy(alpha = 0.05f)
+    val borderCol = if (isSelected) LuxeGold else Color.Transparent
+    val textCol = if (isSelected) Color.White else Color.LightGray
+    val subTextCol = if (isSelected) LuxeLightGold else Color.Gray
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(bg)
+            .border(1.dp, borderCol, RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = if (isSelected) LuxeGold else Color.LightGray,
+            modifier = Modifier.size(20.dp)
+        )
+        Column {
+            Text(
+                text = label,
+                color = textCol,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = description,
+                color = subTextCol,
+                fontSize = 8.sp
+            )
+        }
     }
 }
 

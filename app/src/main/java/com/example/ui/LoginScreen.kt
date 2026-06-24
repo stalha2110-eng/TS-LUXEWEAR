@@ -1,6 +1,7 @@
 package com.example.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,8 +21,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -32,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import com.example.R
 import com.example.data.AuthManager
 import com.example.data.UserRole
 import com.example.ui.theme.*
@@ -47,84 +52,146 @@ fun LoginScreen(
     var showGoogleDialog by remember { mutableStateOf(false) }
     var selectedRoleForAuth by remember { mutableStateOf<UserRole?>(null) }
     var customEmailInput by remember { mutableStateOf("") }
+    var adminPasswordInput by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
+    // Smooth Entry State Animation Trigger
+    val visibleState = remember {
+        MutableTransitionState(false).apply {
+            targetState = true
+        }
+    }
+
+    // Logo pulsing/breathing ambient animations
+    val infiniteTransition = rememberInfiniteTransition(label = "logo_glow_anim")
+    val logoScale by infiniteTransition.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "logo_scale"
+    )
+    val logoGlowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.45f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "logo_glow"
+    )
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        LuxeBurgundy,
-                        Color(0xFF3B0014),
-                        Color(0xFF1E000A)
-                    )
-                )
-            ),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // Decorative ambient sparkles
+        // High-end Luxury Background Image
+        Image(
+            painter = painterResource(id = R.drawable.img_luxury_velvet_bg_1782315399369),
+            contentDescription = "Luxury Silk Velvet Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        // Semi-transparent deep burgundy scrim overlay for premium legibility and luxurious atmosphere
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPaddingForSparkles())
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xDD180007),
+                            Color(0xEE2A000F),
+                            Color(0xFA0D0004)
+                        )
+                    )
+                )
+        )
+
+        AnimatedVisibility(
+            visibleState = visibleState,
+            enter = fadeIn(animationSpec = tween(1200)) + slideInVertically(animationSpec = tween(1000, easing = EaseOutCubic)) { it / 4 }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .windowInsetsPadding(WindowInsets.safeDrawing),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Application Branding
-                Box(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .clip(CircleShape)
-                        .background(LuxeGold.copy(alpha = 0.15f))
-                        .shadow(4.dp, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "TS",
-                        fontSize = 38.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = LuxeGold,
-                        fontFamily = FontFamily.Serif
+                // Application Branding Area with Breathing Aura Glow
+                Box(contentAlignment = Alignment.Center) {
+                    // Radiant halo aura
+                    val logoShape = RoundedCornerShape(16.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(110.dp)
+                            .graphicsLayer {
+                                scaleX = logoScale * 1.2f
+                                scaleY = logoScale * 1.2f
+                                alpha = logoGlowAlpha
+                            }
+                            .clip(logoShape)
+                            .background(LuxeGold)
                     )
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .graphicsLayer {
+                                scaleX = logoScale
+                                scaleY = logoScale
+                            }
+                            .clip(logoShape)
+                            .background(Color.White)
+                            .border(2.5.dp, LuxeGold, logoShape)
+                            .shadow(12.dp, logoShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_luxe),
+                            contentDescription = "TS LuxeWear Brand Logo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     text = "TS LuxeWear",
-                    fontSize = 32.sp,
+                    fontSize = 34.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
                     fontFamily = FontFamily.Serif,
-                    letterSpacing = 2.sp
+                    letterSpacing = 2.5.sp
                 )
 
                 Text(
-                    text = "Exclusive Multitenant Boutique Collection",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = LuxeGold.copy(alpha = 0.8f),
+                    text = "EXCLUSIVE MULTITENANT LUXURY COUTURE",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = LuxeGold.copy(alpha = 0.9f),
                     textAlign = TextAlign.Center,
-                    letterSpacing = 1.sp
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Public Login Options Box
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(16.dp, RoundedCornerShape(16.dp))
+                        .shadow(24.dp, RoundedCornerShape(24.dp))
                         .testTag("login_card"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.08f)),
-                    border = BorderStroke(1.dp, LuxeGold.copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.07f)),
+                    border = BorderStroke(1.5.dp, LuxeGold.copy(alpha = 0.25f))
                 ) {
                     Column(
                         modifier = Modifier
@@ -134,7 +201,7 @@ fun LoginScreen(
                     ) {
                         Text(
                             text = "SECURE PLATFORM GATEWAY",
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = LuxeGold,
                             textAlign = TextAlign.Center,
@@ -144,13 +211,16 @@ fun LoginScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Customer Login (Google)
+                        // 1. Customer Login (Enforced Guest Mode ONLY)
                         Button(
                             onClick = {
-                                selectedRoleForAuth = UserRole.CUSTOMER
-                                customEmailInput = ""
-                                errorMessage = null
-                                showGoogleDialog = true
+                                AuthManager.continueAsGuest()
+                                val loggedIn = AuthManager.currentUserFlow.value
+                                if (loggedIn != null) {
+                                    onLoginSuccess(loggedIn.email, loggedIn.role)
+                                    onNavigateToRoute("customer_home")
+                                }
+                                Toast.makeText(context, "Welcome! Entering Shopping Zone as Guest Shopper. ✨", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -158,34 +228,37 @@ fun LoginScreen(
                                 .testTag("btn_customer_login"),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.White,
-                                contentColor = Color.Black
+                                contentColor = LuxeBurgundy
                             ),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                            shape = RoundedCornerShape(8.dp)
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.5.dp, LuxeGold)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Image(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = "Google Icon",
-                                    modifier = Modifier.size(24.dp)
+                                Icon(
+                                    imageVector = Icons.Default.ShoppingBag,
+                                    contentDescription = "Shopping Bag Icon",
+                                    tint = LuxeBurgundy,
+                                    modifier = Modifier.size(22.dp)
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Customer Login (Google)",
-                                    fontWeight = FontWeight.Bold,
+                                    text = "Enter Shopping Zone (Guest Mode)",
+                                    fontWeight = FontWeight.ExtraBold,
                                     fontSize = 14.sp
                                 )
                             }
                         }
 
-                        // Store Owner Login (Google)
+                        // 2. Store Owner Login (Google Auth)
                         Button(
                             onClick = {
                                 selectedRoleForAuth = UserRole.STORE_OWNER
                                 customEmailInput = ""
+                                adminPasswordInput = ""
                                 errorMessage = null
                                 showGoogleDialog = true
                             },
@@ -198,7 +271,7 @@ fun LoginScreen(
                                 contentColor = Color.Black
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -207,22 +280,23 @@ fun LoginScreen(
                                 Icon(
                                     imageVector = Icons.Default.Storefront,
                                     contentDescription = "Storeowner Icon",
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Store Owner Login (Google)",
+                                    text = "Store Owner Gateway (Google)",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
                             }
                         }
 
-                        // Super Admin Login (Google)
+                        // 3. Super Admin Login (Google Auth + Secure Password Gate)
                         Button(
                             onClick = {
                                 selectedRoleForAuth = UserRole.SUPER_ADMIN
                                 customEmailInput = ""
+                                adminPasswordInput = ""
                                 errorMessage = null
                                 showGoogleDialog = true
                             },
@@ -235,8 +309,8 @@ fun LoginScreen(
                                 contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, LuxeGold.copy(alpha = 0.4f))
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.5.dp, LuxeGold.copy(alpha = 0.5f))
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -245,79 +319,26 @@ fun LoginScreen(
                                 Icon(
                                     imageVector = Icons.Default.Security,
                                     contentDescription = "Super Admin Icon",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "Super Admin Login (Google)",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-
-                        // Separator
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = Color.White.copy(alpha = 0.15f)
-                            )
-                            Text(
-                                text = "OR",
-                                color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                                fontWeight = FontWeight.Bold
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.weight(1f),
-                                color = Color.White.copy(alpha = 0.15f)
-                            )
-                        }
-
-                        // Continue as Guest Option
-                        OutlinedButton(
-                            onClick = {
-                                AuthManager.continueAsGuest()
-                                onNavigateToRoute("customer_home")
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                                .testTag("btn_guest_mode"),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowForward,
-                                    contentDescription = "Guest Icon",
-                                    modifier = Modifier.size(20.dp)
+                                    tint = LuxeGold,
+                                    modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Continue as Guest",
-                                    fontWeight = FontWeight.Medium,
+                                    text = "Super Admin Portal (Protected)",
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
-                                    letterSpacing = 0.5.sp
+                                    color = Color.White
                                 )
                             }
                         }
+
+                        // Secondary quick entry options removed at user request
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(30.dp))
                 
-                // Bottom security footer
+                // Bottom premium security footer
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -325,13 +346,14 @@ fun LoginScreen(
                     Icon(
                         imageVector = Icons.Default.VerifiedUser,
                         contentDescription = "Secure lock",
-                        tint = LuxeGold.copy(alpha = 0.6f),
+                        tint = LuxeGold.copy(alpha = 0.7f),
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = "Verified Google and Firebase Auth Protection Layer",
+                        text = "Authorized Cryptographic Audit Logging Enabled",
                         fontSize = 10.sp,
-                        color = Color.White.copy(alpha = 0.5f)
+                        color = Color.White.copy(alpha = 0.6f),
+                        letterSpacing = 0.5.sp
                     )
                 }
             }
@@ -346,14 +368,46 @@ fun LoginScreen(
                         .padding(12.dp)
                         .testTag("google_auth_dialog"),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(20.dp)
+                            .padding(24.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Brand Logo above input fields with subtle entrance animation
+                        var animateLogoInDialog by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            animateLogoInDialog = true
+                        }
+
+                        AnimatedVisibility(
+                            visible = animateLogoInDialog,
+                            enter = fadeIn(animationSpec = tween(800)) + expandVertically(
+                                animationSpec = tween(800, easing = EaseOutCubic)
+                            )
+                        ) {
+                            val dialogLogoShape = RoundedCornerShape(12.dp)
+                            Box(
+                                modifier = Modifier
+                                    .padding(bottom = 12.dp)
+                                    .size(64.dp)
+                                    .clip(dialogLogoShape)
+                                    .background(Color.White)
+                                    .border(1.5.dp, LuxeGold, dialogLogoShape)
+                                    .shadow(4.dp, dialogLogoShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.logo_luxe),
+                                    contentDescription = "TS LuxeWear Logo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                        }
+
                         // Google Brand visual header matching official chooser style
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -380,12 +434,55 @@ fun LoginScreen(
                         }
 
                         Text(
-                            text = "Choose an account to continue to TS LuxeWear",
+                            text = if (selectedRoleForAuth == UserRole.SUPER_ADMIN) 
+                                "Super Admin Secure Authorization" 
+                            else 
+                                "Choose an account to continue to TS LuxeWear",
                             fontSize = 12.sp,
                             color = Color.Gray,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
+
+                        // Password challenge field for Super Admin role
+                        if (selectedRoleForAuth == UserRole.SUPER_ADMIN) {
+                            Text(
+                                text = "ADMIN GATEWAY PASSWORD REQUIRED",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = LuxeBurgundy,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp),
+                                textAlign = TextAlign.Start
+                            )
+                            OutlinedTextField(
+                                value = adminPasswordInput,
+                                onValueChange = { 
+                                    adminPasswordInput = it
+                                    errorMessage = null
+                                },
+                                label = { Text("Super Admin Password") },
+                                placeholder = { Text("Enter admin key") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                singleLine = true,
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done
+                                ),
+                                leadingIcon = {
+                                    Icon(Icons.Default.Lock, contentDescription = "Password Lock", tint = LuxeBurgundy)
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = LuxeGold,
+                                    focusedLabelColor = LuxeBurgundy,
+                                    unfocusedBorderColor = Color.LightGray
+                                )
+                            )
+                        }
 
                         // If error occurred
                         if (errorMessage != null) {
@@ -399,10 +496,10 @@ fun LoginScreen(
                             ) {
                                 Text(
                                     text = errorMessage!!,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    color = MaterialTheme.colorScheme.onError,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(8.dp),
+                                    modifier = Modifier.padding(10.dp),
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -424,9 +521,7 @@ fun LoginScreen(
                                     Triple("wardrobe.owner@gmail.com", "Royal Wardrobe Boutique Owner", "W")
                                 )
                                 else -> listOf(
-                                    Triple("shakir.customer@gmail.com", "Shakir Shopper", "S"),
-                                    Triple("stalha.customer@gmail.com", "Talha Customer", "T"),
-                                    Triple("shakirsir2122@gmail.com", "Shakir (Customer Mode)", "S")
+                                    Triple("guest@luxewear.com", "Guest Account", "G")
                                 )
                             }
 
@@ -440,13 +535,18 @@ fun LoginScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(12.dp))
                                             .background(Color(0xFFF8F9FA))
-                                            .border(1.dp, Color(0xFFE8EAED), RoundedCornerShape(8.dp))
+                                            .border(1.dp, Color(0xFFE8EAED), RoundedCornerShape(12.dp))
                                             .clickable {
-                                                val success = AuthManager.performGoogleLogin(email, selectedRoleForAuth!!, onError = { error ->
-                                                    errorMessage = error
-                                                })
+                                                val success = AuthManager.performGoogleLogin(
+                                                    email = email,
+                                                    intendedRole = selectedRoleForAuth!!,
+                                                    adminPassword = if (selectedRoleForAuth == UserRole.SUPER_ADMIN) adminPasswordInput else null,
+                                                    onError = { error ->
+                                                        errorMessage = error
+                                                    }
+                                                )
                                                 if (success) {
                                                     showGoogleDialog = false
                                                     val loggedIn = AuthManager.currentUserFlow.value
@@ -508,9 +608,9 @@ fun LoginScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(12.dp))
                                         .background(Color.White)
-                                        .border(1.dp, Color(0xFFDADCE0), RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color(0xFFDADCE0), RoundedCornerShape(12.dp))
                                         .clickable { showCustomInput = true }
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -579,9 +679,14 @@ fun LoginScreen(
 
                                 Button(
                                     onClick = {
-                                        val success = AuthManager.performGoogleLogin(customEmailInput, selectedRoleForAuth!!, onError = { error ->
-                                            errorMessage = error
-                                        })
+                                        val success = AuthManager.performGoogleLogin(
+                                            email = customEmailInput,
+                                            intendedRole = selectedRoleForAuth!!,
+                                            adminPassword = if (selectedRoleForAuth == UserRole.SUPER_ADMIN) adminPasswordInput else null,
+                                            onError = { error ->
+                                                errorMessage = error
+                                            }
+                                        )
                                         if (success) {
                                             showGoogleDialog = false
                                             val loggedIn = AuthManager.currentUserFlow.value

@@ -19,7 +19,8 @@ import java.util.UUID
 object FirebaseBackend {
 
     private var isFirebaseInitialized = false
-    private var isRealFirebaseEnabled = false
+    var isRealFirebaseEnabled = false
+        private set
 
     // State flows representing real-time database snapshot feeds
     private val _isRealtimeSyncing = MutableStateFlow(false)
@@ -203,6 +204,105 @@ object FirebaseBackend {
                 }
         } catch (e: Exception) {
             onComplete(false, e.localizedMessage)
+        }
+    }
+
+    /**
+     * Fetches user wishlist from Firestore if real Firebase services are active.
+     */
+    fun fetchWishlist(userId: String, onComplete: (List<String>?) -> Unit) {
+        if (!isRealFirebaseEnabled) {
+            onComplete(null)
+            return
+        }
+        try {
+            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            db.collection("wishlists").document(userId).get()
+                .addOnSuccessListener { documentSnapshot ->
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        val items = documentSnapshot.get("items") as? List<String>
+                        onComplete(items)
+                    } else {
+                        onComplete(emptyList())
+                    }
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("FirebaseBackend", "Error fetching wishlist: ${e.message}")
+                    onComplete(null)
+                }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseBackend", "Error fetching wishlist: ${e.message}")
+            onComplete(null)
+        }
+    }
+
+    /**
+     * Fetches all reviews from Firestore if real Firebase services are active.
+     */
+    fun fetchReviews(onComplete: (List<com.example.model.ProductReview>?) -> Unit) {
+        if (!isRealFirebaseEnabled) {
+            onComplete(null)
+            return
+        }
+        try {
+            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            db.collection("reviews").get()
+                .addOnSuccessListener { querySnapshot ->
+                    if (querySnapshot != null) {
+                        val reviewList = querySnapshot.documents.mapNotNull { doc ->
+                            val id = doc.getString("id") ?: doc.id
+                            val productId = doc.getString("productId") ?: ""
+                            val reviewerName = doc.getString("reviewerName") ?: ""
+                            val rating = (doc.getLong("rating") ?: 5L).toInt()
+                            val feedback = doc.getString("feedback") ?: ""
+                            com.example.model.ProductReview(
+                                id = id,
+                                productId = productId,
+                                reviewerName = reviewerName,
+                                rating = rating,
+                                feedback = feedback
+                            )
+                        }
+                        onComplete(reviewList)
+                    } else {
+                        onComplete(emptyList())
+                    }
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("FirebaseBackend", "Error fetching reviews: ${e.message}")
+                    onComplete(null)
+                }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseBackend", "Error fetching reviews: ${e.message}")
+            onComplete(null)
+        }
+    }
+
+    /**
+     * Fetches user profile from Firestore if active.
+     */
+    fun fetchUserProfile(userId: String, onComplete: (Map<String, Any>?) -> Unit) {
+        if (!isRealFirebaseEnabled) {
+            onComplete(null)
+            return
+        }
+        try {
+            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            db.collection("user_profiles").document(userId).get()
+                .addOnSuccessListener { doc ->
+                    if (doc != null && doc.exists()) {
+                        onComplete(doc.data)
+                    } else {
+                        onComplete(null)
+                    }
+                }
+                .addOnFailureListener { e ->
+                    android.util.Log.e("FirebaseBackend", "Error fetching user profile: ${e.message}")
+                    onComplete(null)
+                }
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseBackend", "Error fetching user profile: ${e.message}")
+            onComplete(null)
         }
     }
 

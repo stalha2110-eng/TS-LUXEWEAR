@@ -1,13 +1,12 @@
-
 workflows:
-android-workflow:
-name: Android Workflow
-max_build_duration: 60
-environment:
-java: 17
-scripts:
-- name: Build Android App
-script: |
-./gradlew assembleRelease
-artifacts:
-- app/build/outputs/apk/release/*.apk
+  android-workflow:
+    name: Android Workflow
+    max_build_duration: 60
+    environment:
+      java: 17
+    scripts:
+      - name: Build Android App
+        script: |
+          ./gradlew assembleRelease
+    artifacts:
+      - app/build/outputs/apk/release/*.apk
